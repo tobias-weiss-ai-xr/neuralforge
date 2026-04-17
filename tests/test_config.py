@@ -1,4 +1,5 @@
 """Comprehensive tests for forge.config — 40+ tests covering all config values."""
+
 import importlib
 import os
 
@@ -11,6 +12,7 @@ def _reload_config(monkeypatch=None, env_overrides=None):
         for key, value in env_overrides.items():
             monkeypatch.setenv(key, value)
     import forge.config as cfg
+
     importlib.reload(cfg)
     return cfg
 
@@ -35,24 +37,16 @@ class TestNIMDefaults:
         assert cfg.NIM_MODEL == "nvidia/nemotron-70b"
 
 
-class TestTritonDefaults:
-    """Tests for Triton Inference Server configuration."""
+class TestTEIDefaults:
+    """Tests for TEI (Text Embeddings Inference) configuration."""
 
-    def test_triton_url_default(self):
+    def test_tei_embed_url_default(self):
         cfg = _reload_config()
-        assert cfg.TRITON_URL == "http://triton-embed:8000"
+        assert cfg.TEI_EMBED_URL == "http://tei-embed:80"
 
-    def test_triton_grpc_url_default(self):
+    def test_tei_rerank_url_default(self):
         cfg = _reload_config()
-        assert cfg.TRITON_GRPC_URL == "triton-embed:8001"
-
-    def test_embed_model_default(self):
-        cfg = _reload_config()
-        assert cfg.EMBED_MODEL == "embedding"
-
-    def test_rerank_model_default(self):
-        cfg = _reload_config()
-        assert cfg.RERANK_MODEL == "reranker"
+        assert cfg.TEI_RERANK_URL == "http://tei-rerank:80"
 
     def test_embed_cache_ttl_default(self):
         cfg = _reload_config()
@@ -66,21 +60,13 @@ class TestTritonDefaults:
         cfg = _reload_config()
         assert cfg.EMBED_CACHE_MAX == 500
 
-    def test_embed_batch_size_default(self):
-        cfg = _reload_config()
-        assert cfg.EMBED_BATCH_SIZE == 32
-
-    def test_triton_url_env_override(self, monkeypatch):
-        cfg = _reload_config(monkeypatch, {"TRITON_URL": "http://gpu-node:8000"})
-        assert cfg.TRITON_URL == "http://gpu-node:8000"
+    def test_tei_embed_url_env_override(self, monkeypatch):
+        cfg = _reload_config(monkeypatch, {"TEI_EMBED_URL": "http://gpu-node:9000"})
+        assert cfg.TEI_EMBED_URL == "http://gpu-node:9000"
 
     def test_embed_cache_ttl_env_override(self, monkeypatch):
         cfg = _reload_config(monkeypatch, {"EMBED_CACHE_TTL": "600"})
         assert cfg.EMBED_CACHE_TTL == 600
-
-    def test_embed_batch_size_env_override(self, monkeypatch):
-        cfg = _reload_config(monkeypatch, {"EMBED_BATCH_SIZE": "64"})
-        assert cfg.EMBED_BATCH_SIZE == 64
 
 
 class TestQdrantDefaults:

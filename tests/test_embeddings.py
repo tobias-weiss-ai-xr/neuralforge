@@ -1,4 +1,5 @@
 """Tests for forge.core.embeddings — 25 tests covering cache, batch, TTL, eviction, and stats."""
+
 import time
 from unittest.mock import AsyncMock, patch
 
@@ -10,6 +11,7 @@ from forge.core import embeddings
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def _clean_cache():
@@ -28,13 +30,16 @@ def _vec(seed: float, dim: int = 3) -> list[float]:
 # Single embedding
 # ---------------------------------------------------------------------------
 
+
 class TestGetEmbedding:
     """Tests for get_embedding()."""
 
     @pytest.mark.asyncio
     async def test_single_embed_success(self):
         vec = _vec(1.0)
-        with patch.object(embeddings, "infer_embedding", new_callable=AsyncMock, return_value=[vec]):
+        with patch.object(
+            embeddings, "infer_embedding", new_callable=AsyncMock, return_value=[vec]
+        ):
             result = await embeddings.get_embedding("hello")
         assert result == vec
 
@@ -45,18 +50,22 @@ class TestGetEmbedding:
         with patch.object(embeddings, "infer_embedding", mock):
             await embeddings.get_embedding("hello")
             await embeddings.get_embedding("hello")
-        # Triton should be called only once
+        # Backend should be called only once
         assert mock.call_count == 1
 
     @pytest.mark.asyncio
-    async def test_single_embed_triton_failure(self):
-        with patch.object(embeddings, "infer_embedding", new_callable=AsyncMock, return_value=None):
+    async def test_single_embed_backend_failure(self):
+        with patch.object(
+            embeddings, "infer_embedding", new_callable=AsyncMock, return_value=None
+        ):
             result = await embeddings.get_embedding("fail")
         assert result is None
 
     @pytest.mark.asyncio
     async def test_single_embed_empty_result(self):
-        with patch.object(embeddings, "infer_embedding", new_callable=AsyncMock, return_value=[]):
+        with patch.object(
+            embeddings, "infer_embedding", new_callable=AsyncMock, return_value=[]
+        ):
             result = await embeddings.get_embedding("empty")
         assert result is None
 
@@ -73,6 +82,7 @@ class TestGetEmbedding:
 # ---------------------------------------------------------------------------
 # Cache TTL
 # ---------------------------------------------------------------------------
+
 
 class TestCacheTTL:
     """Tests for TTL-based expiry."""
@@ -116,6 +126,7 @@ class TestCacheTTL:
 # ---------------------------------------------------------------------------
 # Cache eviction (max size)
 # ---------------------------------------------------------------------------
+
 
 class TestCacheEviction:
     """Tests for max-size eviction."""
@@ -175,6 +186,7 @@ class TestCacheEviction:
 # Batch embeddings
 # ---------------------------------------------------------------------------
 
+
 class TestGetEmbeddingsBatch:
     """Tests for get_embeddings_batch()."""
 
@@ -215,7 +227,7 @@ class TestGetEmbeddingsBatch:
         assert result[0] == _vec(1.0)
         assert result[1] == _vec(2.0)
         assert result[2] == _vec(3.0)
-        # Only misses sent to Triton
+        # Only misses sent to backend
         mock.assert_called_once_with(["a", "c"])
 
     @pytest.mark.asyncio
@@ -228,7 +240,7 @@ class TestGetEmbeddingsBatch:
         assert "y" in embeddings._cache
 
     @pytest.mark.asyncio
-    async def test_batch_triton_failure_returns_nones(self):
+    async def test_batch_backend_failure_returns_nones(self):
         mock = AsyncMock(return_value=None)
         with patch.object(embeddings, "infer_embedding", mock):
             result = await embeddings.get_embeddings_batch(["a", "b"])
@@ -269,6 +281,7 @@ class TestGetEmbeddingsBatch:
 # ---------------------------------------------------------------------------
 # clear_cache / get_cache_stats
 # ---------------------------------------------------------------------------
+
 
 class TestCacheManagement:
     """Tests for clear_cache() and get_cache_stats()."""

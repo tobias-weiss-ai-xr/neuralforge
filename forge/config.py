@@ -1,18 +1,16 @@
 """Central configuration for NeuralForge."""
+
 import os
 
 # NIM (LLM via TensorRT-LLM)
 NIM_URL = os.environ.get("NIM_URL", "http://nim-llm:8000")
 NIM_MODEL = os.environ.get("NIM_MODEL", "meta/llama-3.1-8b-instruct")
 
-# Triton (embedding + reranking)
-TRITON_URL = os.environ.get("TRITON_URL", "http://triton-embed:8000")
-TRITON_GRPC_URL = os.environ.get("TRITON_GRPC_URL", "triton-embed:8001")
-EMBED_MODEL = os.environ.get("EMBED_MODEL", "embedding")
-RERANK_MODEL = os.environ.get("RERANK_MODEL", "reranker")
+# TEI (embedding + reranking via HuggingFace Text Embeddings Inference)
+TEI_EMBED_URL = os.environ.get("TEI_EMBED_URL", "http://tei-embed:80")
+TEI_RERANK_URL = os.environ.get("TEI_RERANK_URL", "http://tei-rerank:80")
 EMBED_CACHE_TTL = int(os.environ.get("EMBED_CACHE_TTL", "300"))
 EMBED_CACHE_MAX = int(os.environ.get("EMBED_CACHE_MAX", "500"))
-EMBED_BATCH_SIZE = int(os.environ.get("EMBED_BATCH_SIZE", "32"))
 
 # Qdrant
 QDRANT_URL = os.environ.get("QDRANT_URL", "http://qdrant:6333")
@@ -23,7 +21,9 @@ GRAPH_DATA_DIR = os.environ.get("GRAPH_DATA_DIR", "data/graph")
 GRAPH_RELOAD_INTERVAL = int(os.environ.get("GRAPH_RELOAD_INTERVAL", "300"))
 
 # NeMo Guardrails
-GUARDRAILS_CONFIG_DIR = os.environ.get("GUARDRAILS_CONFIG_DIR", "forge/guardrails/config")
+GUARDRAILS_CONFIG_DIR = os.environ.get(
+    "GUARDRAILS_CONFIG_DIR", "forge/guardrails/config"
+)
 GUARDRAILS_ENABLED = os.environ.get("GUARDRAILS_ENABLED", "true").lower() == "true"
 
 # Data
@@ -51,6 +51,18 @@ DISCOVERY_CONFIDENCE_FLOOR = float(os.environ.get("DISCOVERY_CONFIDENCE_FLOOR", 
 
 # File Types
 SUPPORTED_FILE_TYPES = {
-    ".mp3", ".mp4", ".mkv", ".m4a", ".wav", ".flac", ".webm",
-    ".txt", ".md", ".pdf", ".json", ".docx", ".html", ".csv",
+    ".mp3",
+    ".mp4",
+    ".mkv",
+    ".m4a",
+    ".wav",
+    ".flac",
+    ".webm",
+    ".txt",
+    ".md",
+    ".pdf",
+    ".json",
+    ".docx",
+    ".html",
+    ".csv",
 }

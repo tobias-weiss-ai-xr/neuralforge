@@ -3,7 +3,7 @@
 
 Sends a natural language query through the full NeuralForge pipeline:
 vector search via Qdrant, graph-enriched context via cuGraph, reranking
-through Triton, and answer generation via NIM — all behind NeMo Guardrails.
+through TEI, and answer generation via NIM — all behind NeMo Guardrails.
 
 Usage:
     python examples/query_experts.py --query "What is LoRA and why does it work?"
@@ -12,6 +12,7 @@ Usage:
 
 Requires: NeuralForge stack running (docker compose up -d)
 """
+
 import argparse
 import json
 import sys
@@ -45,9 +46,15 @@ def main():
     parser = argparse.ArgumentParser(description="Query the NeuralForge knowledge base")
     parser.add_argument("--query", "-q", required=True, help="Your question")
     parser.add_argument("--expert", "-e", help="Filter to a specific expert")
-    parser.add_argument("--max-tokens", type=int, default=4000, help="Context budget (default: 4000)")
-    parser.add_argument("--no-graph", action="store_true", help="Disable graph context enrichment")
-    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    parser.add_argument(
+        "--max-tokens", type=int, default=4000, help="Context budget (default: 4000)"
+    )
+    parser.add_argument(
+        "--no-graph", action="store_true", help="Disable graph context enrichment"
+    )
+    parser.add_argument(
+        "--format", choices=["text", "json"], default="text", help="Output format"
+    )
     parser.add_argument("--api", default=API, help="NeuralForge API URL")
     args = parser.parse_args()
 

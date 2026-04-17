@@ -1,14 +1,15 @@
 """Embedding client with TTL cache and batch support.
 
-Uses :mod:`forge.core.triton_client` as the backend for generating
+Uses :mod:`forge.core.tei_client` as the backend for generating
 embeddings and provides an in-memory cache with time-to-live eviction
 and maximum-size limits.
 """
+
 import logging
 import time
 
 from forge.config import EMBED_CACHE_TTL, EMBED_CACHE_MAX
-from forge.core.triton_client import infer_embedding
+from forge.core.tei_client import infer_embedding
 
 logger = logging.getLogger(__name__)
 
@@ -100,9 +101,7 @@ async def get_embeddings_batch(texts: list[str]) -> list[list[float] | None]:
 
     if embeddings is None:
         # Triton failed — all misses remain None
-        logger.warning(
-            "Triton batch embedding failed for %d texts", len(miss_texts)
-        )
+        logger.warning("Triton batch embedding failed for %d texts", len(miss_texts))
         return results
 
     # Phase 3: merge results and update cache

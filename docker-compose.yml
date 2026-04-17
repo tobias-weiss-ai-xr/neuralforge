@@ -1,6 +1,6 @@
 # ─────────────────────────────────────────────────────────────
 # NeuralForge — Full GPU Stack
-# 4 services: NeuralForge API + NIM LLM + Triton + Qdrant
+# 4 services: NeuralForge API + NIM LLM + TEI Embed/Rerank + Qdrant
 #
 # Deploy:  docker compose up -d
 # Monitor: docker compose logs -f neuralforge
@@ -26,14 +26,16 @@ services:
       - nim-cache:/opt/nim/.cache
     environment:
       NIM_URL: http://nim-llm:8000
-      TRITON_URL: http://triton-embed:8000
-      TRITON_GRPC_URL: triton-embed:8001
+      TEI_EMBED_URL: http://tei-embed:80
+      TEI_RERANK_URL: http://tei-rerank:80
       QDRANT_URL: http://qdrant:6333
       GUARDRAILS_ENABLED: "true"
     depends_on:
       nim-llm:
         condition: service_healthy
-      triton-embed:
+      tei-embed:
+        condition: service_started
+      tei-rerank:
         condition: service_started
       qdrant:
         condition: service_healthy
@@ -65,14 +67,12 @@ services:
       start_period: 120s
     restart: unless-stopped
 
-  # ── Triton Inference Server (Embedding + Reranking) ──────
-  triton-embed:
-    image: nvcr.io/nvidia/tritonserver:24.12-py3
-    container_name: neuralforge-triton
+  # ── TEI Embedding Server ─────────────────────────────────
+  tei-embed:
+    image: ghcr.io/huggingface/text-embeddings-inference:1.7
+    container_name: neuralforge-tei-embed
     ports:
-      - "8001:8000"   # HTTP
-      - "8002:8001"   # gRPC
-      - "8003:8002"   # Metrics
+      - "8001:80"
     deploy:
       resources:
         reservations:
@@ -80,14 +80,27 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-    shm_size: "1g"
     volumes:
-      - ./triton/models:/models
-    command: >
-      tritonserver
-        --model-repository=/models
-        --log-verbose=0
-        --strict-model-config=false
+      - tei-embed-cache:/data
+    command: --model-id ${EMBED_MODEL:-nomic-ai/nomic-embed-text-v1.5}
+    restart: unless-stopped
+
+  # ── TEI Reranking Server ─────────────────────────────────
+  tei-rerank:
+    image: ghcr.io/huggingface/text-embeddings-inference:1.7
+    container_name: neuralforge-tei-rerank
+    ports:
+      - "8002:80"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - tei-rerank-cache:/data
+    command: --model-id ${RERANK_MODEL:-BAAI/bge-reranker-large}
     restart: unless-stopped
 
   # ── Qdrant Vector Database ──────────────────────────────
@@ -114,4 +127,8 @@ volumes:
   nim-cache:
     driver: local
   qdrant-data:
+    driver: local
+  tei-embed-cache:
+    driver: local
+  tei-rerank-cache:
     driver: local
